@@ -4,36 +4,28 @@
     Nick H 
 """
 
-import os
-
-docnum = 0
+file = "" 
 
 def generate(comments) :
+
+    global file 
 
     for comment in comments :
 
         if comment.startswith('@') :
 
-            match comment.split(maxsplit = 1)[0] :
+            match comment.split()[0] :
 
                 case "@DOCS" : newDoc(comment)
 
+    with open("docs.md", "w") as docs:
+        
+        docs.write(file)
+
 def newDoc(comment) :
 
-    global docnum
+    global file
 
-    os.makedirs("docs", exist_ok = True)
+    comment = comment.split()
 
-    # no name specified
-    if not comment.split()[1].startswith("@") :
-
-        with open("docs/" + str(docnum) + ".md", "w") as file :
-
-            file.write(" ".join(comment.split()[1:]))
-            docnum += 1
-
-    else :
-
-        with open("docs/" + comment.split()[1].lstrip('@') + ".md", 'w') as file :
-
-            file.write("# " + comment.split()[1].lstrip('@'))
+    file = file + f"# {comment[1]}\n{" ".join(comment[1:])}"

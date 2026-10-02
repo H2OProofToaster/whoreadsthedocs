@@ -8,6 +8,7 @@
 
 import sys
 
+
 def stripCComment(file) :
 
     text = file.read()
@@ -20,9 +21,7 @@ def stripCComment(file) :
 
         stripped = line.lstrip()
         if stripped.startswith('*') : # rid javadocs style multiline comment '*'
-            stripped = stripped[1:]
-            if stripped.startswith(' ') : # rid following ' '
-                stripped = stripped[1:]
+            stripped = stripped[1:].removeprefix(' ')
         return stripped
 
     def multilineFlush() :
@@ -93,9 +92,3 @@ def stripCComment(file) :
     if current : comments.append(multilineFlush() if multiline else ''.join(current).strip())
 
     return comments
-
-# validate input
-if len(sys.argv) != 2 : sys.exit(1)
-
-with open(sys.argv[1], "r") as file :
-    print(stripCComment(file))
