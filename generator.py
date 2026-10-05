@@ -4,28 +4,20 @@
     Nick H 
 """
 
-file = "" 
-
 def generate(comments) :
 
-    global file 
+    md = ""
 
     for comment in comments :
 
-        if comment.startswith('@') :
+        match comment.split()[0] :
 
-            match comment.split()[0] :
+            case "@DOCS" : md += newDoc(comment)
 
-                case "@DOCS" : newDoc(comment)
-
-    with open("docs.md", "w") as docs:
-        
-        docs.write(file)
+    return md
 
 def newDoc(comment) :
 
-    global file
-
     comment = comment.split()
 
-    file = file + f"# {comment[1]}\n{" ".join(comment[1:])}"
+    return f"# {comment[1]}\n{" ".join(comment[1:])}"
