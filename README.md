@@ -18,20 +18,29 @@ but more language support in the future is something I hope for.
 - @FUNC
 
 ## Examples
+
 ### @DOCS decorator
-For this code snippet,
+For this code snippet from 'add.c',
 ```c
 /* @DOCS
  * # Add
  * This function takes two numbers and adds them
  */
-  int add (int a, int b);
+int add (int a, int b);
 ```
-This file would be generated,
+This file would be generated 'docs/add.md' at the project root,
 ```md
 # Add
 This function takes two numbers and adds them
 ```
+
+### @TXT decorator
+This outputs .txt files rather than .md files \
+(Not supported yet)
+
+### @FUNC decorator
+This pulls and documents function information when placed above a signature \
+(Not supported yet)
 
 ## Why did I make this?
 Well, I did very little research confirming that a similar tool doesn't exist,
