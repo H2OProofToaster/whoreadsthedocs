@@ -4,20 +4,40 @@
     Nick H 
 """
 
+# why is python this hacky
+def raiseNIE() : raise NotImplementedError()
+
 def generate(comments) :
 
-    md = ""
+    doc = []
+
+    def parseComment(comment) :
+
+        decorators = ["@DOCS", "@TEXT", "@LIST"]
+        checks = { "@DOCS" : lambda comment: "\n\n" + ' '.join(comment[1:]) + "\n\n",
+                "@TEXT" : lambda comment: raiseNIE(),
+                "@LIST" : lambda comment: raiseNIE(), }
+
+        for word in comment.split() :
+
+            if word in decorators : return checks[word](comment)
 
     for comment in comments :
 
-        match comment.split()[0] :
+        match comment[1] :
 
-            case "@DOCS" : md += newDoc(comment)
+            case "inline" :
 
-    return md
+                comment = comment.split()
 
-def newDoc(comment) :
+                # if the first comment is an inline
+                if doc == [] :
+                    doc.append(parseComment(comment).split('\n\n')[1:])
+                else :
+                    doc.append(parseComment(comment))
 
-    comment = comment.split()
+            case "block" :
 
-    return f"# {comment[1]}\n{" ".join(comment[1:])}"
+                doc.append(comment)
+
+    return ''.join(doc)

@@ -3,14 +3,13 @@
 import os
 import sys
 
-import generator
-import tokenizer
-
+from generator import generate
+from tokenizer import tokenize
 
 def documentFile(path, dst) :
 
-    comments = tokenizer.stripCComment(path)
-    out = generator.generate(comments)
+    comments = tokenize(path)
+    out = generate(comments)
     os.makedirs(os.path.dirname(dst), exist_ok = True)
     with open(dst, "w") as file : file.write(out)
 

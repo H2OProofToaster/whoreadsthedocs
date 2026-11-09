@@ -4,87 +4,100 @@
     Nick H 
 """
 
-def stripCComment(file) :
+# I was too lazy to make these myself, thanks claude
+def stripStar(line) :
 
-    with open(file, "r") as f :
-        text = f.read()
-        comments = []
-        current = []
-        i = 0
-        string = char = inline = multiline = False
+    stripped = line.lstrip()
+    if stripped.startswith('*') : # rid javadocs style multiline comment '*'
+        stripped = stripped[1:].removeprefix(' ')
+    return stripped
+def multilineFlush(current) :
 
-        def stripStar(line) :
+    # combine multiline lines 
+    lines = ''.join(current).split('\n')
+    clean = []
+    for i, line in enumerate(lines) :
 
-            stripped = line.lstrip()
-            if stripped.startswith('*') : # rid javadocs style multiline comment '*'
-                stripped = stripped[1:].removeprefix(' ')
-            return stripped
+        # plain strip for first line
+        if i == 0 : clean.append(line.strip())
 
-        def multilineFlush() :
+        # last line is filler between comment and closing "*/"
+        else :
+            temp = stripStar(line)
+            clean.append(temp.strip() if i == len(lines) - 1 else temp)
+    return '\n'.join(clean).strip()
 
-            # combine multiline lines 
-            lines = ''.join(current).split('\n')
-            clean = []
-            for i, line in enumerate(lines) :
+def tokenize(file, lang = "C") :
 
-                # plain strip for first line
-                if i == 0 : clean.append(line.strip())
+    match(lang) :
 
-                # last line is filler between comment and closing "*/"
-                else :
-                    temp = stripStar(line)
-                    clean.append(temp.strip() if i == len(lines) - 1 else temp)
-            return '\n'.join(clean).strip()
+        case "C" :
 
-        while i < len(text) :
-            
-            curr = text[i]
-            next = text[i + 1] if i + 1 < len(text) else ''
+            with open(file, "r") as f :
+                text = f.read
+                comments = []
+                current = []
 
-            if inline :
+                string = char = inline = block = False
 
-                if curr == '\n': # end inline comment
-                    
-                    inline = False
-                    comments.append(''.join(current).strip())
-                    current = []
-                
-                else : current.append(curr)
+                i = 0
+                while i < len(text) :
 
-            elif multiline :
+                    curr = text[i]
+                    next = text[i + 1] if i + 1 < len(text) else ""
 
-                if curr == '*' and next == '/' : # end multiline comment
-                    
-                    multiline = False
-                    comments.append(multilineFlush())
-                    current = []
+                    if inline :
+
+                        # end of inline
+                        if curr == '\n' :
+
+                            inline = False
+                            comments.append( (''.join(current).strip(), "inline") )
+                            current = []
+
+                        else : current.append(curr)
+
+                    elif block :
+
+                        # end of block
+                        if curr == '*' and next == '/' :
+
+                            block = False
+                            comments.append( (multilineFlush(current), "block") )
+                            current = []
+                            i += 1 # eat extra '*'
+
+                        else : current.append(curr)
+
+                    elif string :
+                        
+                        match(curr) : 
+                            
+                            case '\\' : i += 1 # deal with blackslash escape
+
+                            case "'" : string = False
+
+                    elif char :
+
+                        match(curr) : 
+                                                    
+                            case '\\' : i += 1 # deal with blackslash escape
+
+                            case '"' : char = False
+
+                    # enter into sequences
+                    else :
+
+                        match ( (curr, next) ) :
+
+                            case ('/', '/') : inline = True; i += 1
+
+                            case ('/', '*') : block = True; i += 1
+
+                            case ('"', _) : string = True
+
+                            case ("'", _) : char = True
+
                     i += 1
 
-                else : current.append(curr)
-
-            elif string : # track if in string, because comment-like syntax in strings aren't real comments
-
-                if curr == '\\' : i += 1
-                elif curr == '"' : string = False
-
-            elif char : # same logic as for strings
-
-                if curr == '\\' : i += 1
-                elif curr == "'" : char = False
-
-            else : # enter into comments/literals
-
-                if curr == '/' and next == '/' : inline = True ; i += 1
-
-                elif curr == '/' and next == '*' : multiline = True ; i += 1
-
-                elif curr == '"' : string = True
-
-                elif curr == "'" : char = True
-
-            i += 1
-
-        # cleanup unterminated comments
-        if current : comments.append(multilineFlush() if multiline else ''.join(current).strip())
-
-        return comments
+            return comments
