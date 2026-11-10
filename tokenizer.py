@@ -34,7 +34,7 @@ def tokenize(file, lang = "C") :
         case "C" :
 
             with open(file, "r") as f :
-                text = f.read
+                text = f.read()
                 comments = []
                 current = []
 
@@ -75,7 +75,7 @@ def tokenize(file, lang = "C") :
                             
                             case '\\' : i += 1 # deal with blackslash escape
 
-                            case "'" : string = False
+                            case '"' : string = False
 
                     elif char :
 
@@ -83,7 +83,7 @@ def tokenize(file, lang = "C") :
                                                     
                             case '\\' : i += 1 # deal with blackslash escape
 
-                            case '"' : char = False
+                            case "'" : char = False
 
                     # enter into sequences
                     else :

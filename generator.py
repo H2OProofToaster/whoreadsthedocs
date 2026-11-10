@@ -14,13 +14,17 @@ def generate(comments) :
     def parseComment(comment) :
 
         decorators = ["@DOCS", "@TEXT", "@LIST"]
-        checks = { "@DOCS" : lambda comment: "\n\n" + ' '.join(comment[1:]) + "\n\n",
-                "@TEXT" : lambda comment: raiseNIE(),
-                "@LIST" : lambda comment: raiseNIE(), }
+        found = []
 
-        for word in comment.split() :
+        while True :
 
-            if word in decorators : return checks[word](comment)
+            word, _, rest = comment.partition(' ')
+            if word not in decorators : break
+
+            found.append(word)
+            comment = rest
+
+        return found, comment
 
     for comment in comments :
 
@@ -28,16 +32,16 @@ def generate(comments) :
 
             case "inline" :
 
-                comment = comment.split()
+                found, text = parseComment(comment[0])
+                
+                if "@DOCS" in found and doc != []:
+                    doc.append("\n\n" + text + "\n\n")
 
-                # if the first comment is an inline
-                if doc == [] :
-                    doc.append(parseComment(comment).split('\n\n')[1:])
-                else :
-                    doc.append(parseComment(comment))
+                elif "@DOCS" in found and doc == []:
+                    doc.append(text + "\n\n")
 
             case "block" :
 
-                doc.append(comment)
+                doc.append(comment[0])
 
     return ''.join(doc)

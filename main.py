@@ -1,50 +1,64 @@
-#!/usr/bin/python3.14
+#!/usr/bin/env python3
 
+import argparse
 import os
 import sys
 
 from generator import generate
 from tokenizer import tokenize
 
-def documentFile(path, dst) :
+extensions = { "C" : { ".c", ".h" } }
 
-    comments = tokenize(path)
+def documentFile(path, dst, language) :
+
+    comments = tokenize(path, language)
     out = generate(comments)
+    if not out: return
     os.makedirs(os.path.dirname(dst), exist_ok = True)
     with open(dst, "w") as file : file.write(out)
 
-def document(src, dst = "docs") :
+def document(src, dst, language) :
 
-    abs = os.path.abspath(dst)
+    def attempt(path, out) :
+        
+        try : documentFile(path, out, language)
+
+        except Exception as e : print(f"skipping {path}: {type(e).__name__}: {e}", file = sys.stderr)
+
+    # do a single file arbitrarily
+    if os.path.isfile(src) : attempt(src, os.path.join(dst, os.path.basename(src) + ".md"))
+
+    dstAbs = os.path.abspath(dst)
+    exts = extensions[language]
     
-    if os.path.isfile(src) : 
-
-        name = os.path.splitext(os.path.basename(src))[0] + ".md"
-        documentFile(src, os.path.join(dst, name))
-        return 
-
-    for dirpath, dirnames, filenames in os.walk(src, onerror = print) :
+    for dirpath, dirnames, filenames in os.walk(src, onerror = lambda e: print(e, file = sys.stderr)) :
 
         # don't document docs directory, so filter it out
         dirnames[:] = [
             d for d in dirnames
-            if os.path.abspath(os.path.join(dirpath, d)) != abs
+            if not d.startswith('.') and os.path.abspath(os.path.join(dirpath, d)) != dstAbs
         ]
 
         for file in filenames :
 
-            # maybe check file extentions here 
+            if os.path.splitext(file)[1].lower() not in exts : continue
+
             path = os.path.join(dirpath, file)
             rel = os.path.relpath(path, src)
-            out = os.path.join(dst, os.path.splitext(rel)[0] + ".md")
-            documentFile(path, out)
+            attempt(path, os.path.join(dst, rel + ".md"))
 
-def main () :
- 
-    # validate input
-    if len(sys.argv) != 2 : print("Proper usage: ./main.py <file or directory to docyment>"); sys.exit(1)
+def main() :
 
-    document(sys.argv[1])
+    parser = argparse.ArgumentParser(
+        prog = "wrtd",
+        description = "Generrate project doecumentation from comments.",
+    )
+    parser.add_argument("src", help = "file or directory to document")
+    parser.add_argument("-o", "--output", default = "docs", help = "output directory (default: docs)")
+    parser.add_argument("-l", "--language", default = "C", choices = sorted(extensions), help = "source language (defualt: C)")
+
+    args = parser.parse_args()
+    document(args.src, args.output, args.language)
 
 if __name__ == "__main__" :
     main()
